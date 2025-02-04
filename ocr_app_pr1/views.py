@@ -10,7 +10,14 @@ from django.core.files.base import ContentFile
 import tempfile
 
 # Set the Tesseract OCR path
-pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+# pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+import shutil
+tesseract_cmd = shutil.which("tesseract")
+if tesseract_cmd:
+    pytesseract.pytesseract.tesseract_cmd = tesseract_cmd
+else:
+    raise RuntimeError("Tesseract OCR not found!")
+
 
 def upload_and_scan_image(request):
     if request.method == 'POST':
