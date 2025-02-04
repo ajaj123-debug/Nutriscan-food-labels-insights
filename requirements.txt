@@ -3,3 +3,11 @@ Django==5.1.2  # or the version you're using
 gunicorn
 whitenoise==6.7.0
 brotli==1.1.0
+tesseract-ocr
+tesseract-ocr-eng
+libtesseract-dev
+pytesseract
+opencv-python
+gunicorn
+whitenoise
+django

@@ -6,6 +6,8 @@ import pytesseract
 from PIL import Image
 from .models import HarmfulIngredient  # Import the HarmfulIngredient model
 import os
+from django.core.files.base import ContentFile
+import tempfile
 
 # Set the Tesseract OCR path
 pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
@@ -19,7 +21,13 @@ def upload_and_scan_image(request):
 
         # Create a path in the media directory
         file_name = uploaded_file.name
-        file_path = default_storage.save(f'temp/{file_name}', ContentFile(uploaded_file.read()))
+        temp_file = tempfile.NamedTemporaryFile(delete=False)
+        temp_file.write(uploaded_file.read())
+        temp_file_path = temp_file.name
+        temp_file.close()
+        with open(temp_file_path, 'rb') as image_file:
+            extracted_text = pytesseract.image_to_string(Image.open(image_file))
+
 
         try:
             # Perform OCR processing on the image
