@@ -1,150 +1,460 @@
+{% extends 'base.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NutriScan : Upload and Scan</title>
-    {% comment %} <link rel="stylesheet" href="{% static 'css/dark-mode.css' %}">
-    <link rel="stylesheet" href="{% static 'styles.css' %}"> {% endcomment %}
-    <link rel="icon" type="image/jpg" href="{% static 'sunscreeningredients3-2_grande.webp' %}">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <style>
-        body, html {
-            height: 100%;
-            width: 100%;
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-family: Arial, sans-serif;
-            background-image: url("{% static '403999-111122-ent-breakingbad-hmed.webp' %}");
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-        }
-        .container {
-            text-align: center;
-            width: 100%;
-            max-width: 300px;
-            background-color: rgba(255, 255, 255, 0.6);
-            padding: 12px;
-            border-radius: 11px;
-        } 
-       
-        form {
-            margin: 10px 20px;
-        }
-        button {
-            margin-top: 20px;
-            padding: 10px 20px;
-            background-color: #EB5A39;
-            color: white;
-            border: none;
-            border-radius: 8px; 
-            cursor: pointer;
-            font-size: 16px;
-            transition: background-color 0.3s ease, transform 0.3s ease;
-        }
-        input[type="file"] {
-            display: none;
-        }
-        .custom-file-upload {
-            display: block;
-            padding: 09px;
-            background-color: #EB5A39;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: background-color 0.3s ease, transform 0.3s ease;
-        }
-        
-        .custom-file-upload:hover,
-        button:hover {
-            background-color: #45a049;
-            transform: scale(1.04);
-        }
-        .clickable-image {
-            width: 80px;
-            height: 80px;
-            cursor: pointer;
-            transition: transform 0.3s ease;
-        }
-        .clickable-image:hover {
-            transform: scale(1.1);
-        }
 
-        .ooga_booga{
-            border-radius: 8px;
-            margin-top: 15px;
+{% block title %}Scan Page{% endblock %}
 
-        }
-        .ooga_booga:hover,
-        button:hover{
-            background-color: #45a049;
-            transform: scale(1.06);
-        }
+{% block styles %}
+<style>
+    /* Main Layout & Typography */
+    #scan-page-wrapper {
+        width: 100%;
+        max-width: 650px;
+        margin: 0 auto;
+        text-align: center;
+    }
+    #main-title {
+        color: hsl(var(--foreground));
+        font-weight: 700;
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+    }
+    .animated-subtitle {
+        color: hsl(var(--muted-foreground));
+        height: 1.5rem;
+        margin-bottom: 2rem;
+        font-size: 1.1rem;
+    }
+    #typewriter::after {
+        content: '|';
+        animation: blink 1s step-end infinite;
+        color: hsl(var(--primary));
+        font-weight: 100;
+    }
+    @keyframes blink {
+        from, to { color: transparent }
+        50% { color: hsl(var(--primary)); }
+    }
 
-    </style>
-</head>
-<body>
-
-{% include 'navbar.html' %}
+    /* Main Scan Container */
+    #scan-container {
+        background-color: hsl(var(--card) / 0.8);
+        padding: 2rem;
+        border-radius: var(--radius);
+        border: 1px solid hsl(var(--border));
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.15);
+    }
     
-    <div class="container">
-        <h1>NutriScan</h1>
-        <form id="upload-form" method="POST" enctype="multipart/form-data">
-            {% csrf_token %}
-            <label for="file-upload" class="custom-file-upload">
-                Choose File
-            </label>
-            <input id="file-upload" type="file" name="file" required>
-            <button type="submit" class = "ooga_booga">Upload and Scan</button>
-        </form>
-        
-        <h3>Your product has these Harmful Ingredients:</h3>
-        <ul id="output"></ul>
+    /* Input Mode Switcher */
+    .input-mode-switcher {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+    }
+    .mode-btn {
+        padding: 0.5rem 1rem;
+        border: 1px solid hsl(var(--border));
+        background-color: hsl(var(--secondary));
+        color: hsl(var(--secondary-foreground));
+        border-radius: var(--radius);
+        cursor: pointer;
+        font-weight: 600;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+    .mode-btn:hover { background-color: hsl(var(--accent)); }
+    .mode-btn.active {
+        background-color: hsl(var(--primary));
+        color: hsl(var(--primary-foreground));
+        border-color: hsl(var(--primary));
+    }
 
+    /* Scan Area */
+    .scan-area {
+        border-radius: var(--radius);
+        overflow: hidden; /* Ensures video stream corners are rounded */
+    }
+
+    /* File Upload Container */
+    #upload-container {
+        border: 2px dashed hsl(var(--border));
+        border-radius: var(--radius);
+        padding: 2rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+        transition: border-color 0.3s ease, background-color 0.3s ease;
+        position: relative; /* For preview overlay */
+        min-height: 250px;
+    }
+    #upload-container.dragover {
+        border-color: hsl(var(--primary));
+        background-color: hsl(var(--accent));
+    }
+    #upload-prompt { text-align: center; }
+    #upload-prompt .icon { font-size: 3rem; color: hsl(var(--primary)); margin-bottom: 1rem; }
+    #upload-prompt p { margin: 0; }
+    #upload-prompt .browse-link { color: hsl(var(--primary)); font-weight: 600; cursor: pointer; }
+    
+    #image-preview-container {
+        display: none; /* Hidden by default */
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        padding: 1rem;
+        box-sizing: border-box;
+    }
+    #image-preview {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        border-radius: calc(var(--radius) - 4px);
+    }
+
+    /* Camera View */
+    #camera-container { display: none; flex-direction: column; align-items: center; gap: 1rem; }
+    #camera-stream, #snapshot { width: 100%; border-radius: var(--radius); }
+
+    /* Action Buttons */
+    .action-btn-group { margin-top: 1.5rem; display: flex; gap: 1rem; justify-content: center; }
+    .action-btn {
+        padding: 0.75rem 1.5rem;
+        background-color: #16a34a; /* Green */
+        color: white;
+        border: none;
+        border-radius: var(--radius); 
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: 600;
+        position: relative;
+        overflow: hidden;
+        transition: background-color 0.2s ease;
+    }
+    .action-btn:hover { background-color: #15803d; }
+    .btn-secondary {
+        background-color: hsl(var(--secondary));
+        color: hsl(var(--secondary-foreground));
+    }
+    .btn-secondary:hover { background-color: hsl(var(--accent)); }
+    
+    /* Shine Effects */
+    .action-btn::before, .mode-btn:not(.active)::before {
+        content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+        background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+        transition: left 0.6s ease;
+    }
+    .action-btn:hover::before, .mode-btn:not(.active):hover::before { left: 100%; }
+    .mode-btn.active::before {
+        background: linear-gradient(120deg, transparent, rgba(0, 0, 0, 0.15), transparent);
+    }
+    .mode-btn.active:hover::before { left: 100%; }
+
+    /* Loading State */
+    #loading-spinner { border: 5px solid hsl(var(--secondary)); border-top: 5px solid hsl(var(--primary)); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 2rem auto; }
+    #loading-text { color: hsl(var(--muted-foreground)); margin-top: 1rem; font-style: italic; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="scan-page-wrapper">
+    <div id="input-section">
+        <h1 id="main-title">NutriScan AI</h1>
+        <p class="animated-subtitle"><span id="typewriter"></span></p>
+
+        <form id="analysis-form" onsubmit="return false;">
+            {% csrf_token %}
+            <div id="scan-container">
+                <div class="input-mode-switcher">
+                    <button type="button" class="mode-btn active" id="upload-mode-btn">Upload Image</button>
+                    <button type="button" class="mode-btn" id="camera-mode-btn">Use Camera</button>
+                </div>
+
+                <div class="scan-area">
+                    <div id="upload-container">
+                        <input id="file-upload" type="file" name="file" accept="image/*" style="display:none;">
+                        <div id="upload-prompt">
+                            <div class="icon">&#128229;</div>
+                            <p><strong>Drag & drop an image here</strong></p>
+                            <p style="color: hsl(var(--muted-foreground));">or <span class="browse-link">browse files</span></p>
+                        </div>
+                        <div id="image-preview-container">
+                            <img id="image-preview" src="#" alt="Image Preview">
+                        </div>
+                    </div>
+
+                    <div id="camera-container">
+                        <video id="camera-stream" autoplay playsinline></video>
+                        <img id="snapshot" style="display:none;">
+                        <canvas id="canvas" style="display:none;"></canvas>
+                    </div>
+                </div>
+
+                <div class="action-btn-group">
+                    <button type="button" id="analyze-btn" class="action-btn" style="display:none;">Analyze</button>
+                    <button type="button" id="remove-file-btn" class="action-btn btn-secondary" style="display:none;">Remove</button>
+                    <button type="button" id="capture-btn" class="action-btn" style="display:none;">Capture</button>
+                    <button type="button" id="recapture-btn" class="action-btn btn-secondary" style="display:none;">Retake</button>
+                </div>
+            </div>
+        </form>
     </div>
 
-    <script>
-        $(document).ready(function(){
-            $('#upload-form').on('submit', function(e){
-                e.preventDefault();
+    <div id="loading-spinner" style="display: none;"></div>
+    <p id="loading-text" style="display: none;"></p>
+</div>
+{% endblock %}
 
-                const formData = new FormData(this);
+{% block scripts %}
+<script>
+$(document).ready(function(){
+    // --- Typewriter & Loading Text (No Changes) ---
+    const words = ["Scan any food label.", "Get instant AI analysis.", "Make healthier choices."];
+    let i = 0, j = 0, currentWord = "", isDeleting = false;
+    const typewriterElement = $('#typewriter');
+    function type() {
+        currentWord = words[i];
+        if (isDeleting) {
+            typewriterElement.text(currentWord.substring(0, j - 1));
+            j--;
+            if (j === 0) {
+                isDeleting = false;
+                i = (i + 1) % words.length;
+                setTimeout(type, 500); return;
+            }
+        } else {
+            typewriterElement.text(currentWord.substring(0, j + 1));
+            j++;
+            if (j === currentWord.length) {
+                isDeleting = true;
+                setTimeout(type, 2000); return;
+            }
+        }
+        setTimeout(type, isDeleting ? 50 : 150);
+    }
+    type();
 
-                // Adding the CSRF token
-                formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+    const loadingMessages = ["Parsing the ingredients... Our AI is working hard 🧠", "Analyzing your food... Just a byte more 🍴💻", "Feeding data to our AI chef... 🔬👨‍🍳", "Mixing nutrition with intelligence... Stand by 🧪🤖", "Crunching the calorie code... 🔓🔥", "Give us a sec—good health takes time 😊", "Brewing something healthy... ☕🍏", "Your smart nutrition report is loading...", "Crunching the numbers—and the carrots 🥕📈", "Hacking your meal for insights... 🛠️🥗", "Almost ready! Just peeling a few data layers 🍌📊", "Scanning ingredients for nutritional content...", "Calculating macros, micros, and more...", "Performing intelligent dietary analysis...", "Building your food profile with precision...", "Compiling a nutrient breakdown... Please wait.", "Uploading your meal...", "Identifying ingredients...", "Analyzing nutrients...", "Finalizing your food report..."];
+    let loadingInterval;
 
-                $.ajax({
-                    url: "{% url 'upload_and_scan_image' %}",
-                    type: 'POST',
-                    data: formData,
-                    processData: false,
-                    contentType: false,
-                    success: function(data){
-                        $('#output').empty();
-                        if(data.matched_ingredients.length > 0){
-                            $.each(data.matched_ingredients, function(index, ingredient){
-                                $('#output').append('<li><strong>' + ingredient.name + ':</strong> ' + ingredient.description + '</li>');
-                            });
-                        } else {
-                            $('#output').append('Nothing Harmful Detected, enjoy your product :)');
-                        }
-                    },
-                    error: function(xhr, status, error){
-                        console.error('Error:', error);
-                    }
-                });
-            });
+    // --- Redesigned Page Logic ---
+    let currentMode = 'upload';
+    let uploadedFile = null;
+    let stream;
 
-            $('.clickable-image').on('click', function() {
-                $(this).fadeOut();
-            });
+    // --- jQuery Selectors ---
+    const $uploadContainer = $('#upload-container');
+    const $cameraContainer = $('#camera-container');
+    const $uploadModeBtn = $('#upload-mode-btn');
+    const $cameraModeBtn = $('#camera-mode-btn');
+    const $video = $('#camera-stream')[0];
+    const $canvas = $('#canvas')[0];
+    const $snapshot = $('#snapshot');
+    const $inputSection = $('#input-section');
+    const $loadingSpinner = $('#loading-spinner');
+    const $loadingText = $('#loading-text');
+
+    // Button Selectors
+    const $analyzeBtn = $('#analyze-btn');
+    const $removeFileBtn = $('#remove-file-btn');
+    const $captureBtn = $('#capture-btn');
+    const $recaptureBtn = $('#recapture-btn');
+
+    // --- Mode Switching ---
+    $uploadModeBtn.on('click', () => switchMode('upload'));
+    $cameraModeBtn.on('click', () => switchMode('camera'));
+
+    function switchMode(mode) {
+        currentMode = mode;
+        if (mode === 'upload') {
+            $uploadModeBtn.addClass('active');
+            $cameraModeBtn.removeClass('active');
+            $uploadContainer.show();
+            $cameraContainer.hide();
+            stopCamera();
+            updateButtonVisibility();
+        } else {
+            $cameraModeBtn.addClass('active');
+            $uploadModeBtn.removeClass('active');
+            $uploadContainer.hide();
+            $cameraContainer.css('display', 'flex');
+            startCamera();
+            updateButtonVisibility();
+        }
+    }
+
+    function updateButtonVisibility() {
+        // Hide all buttons first
+        $analyzeBtn.hide();
+        $removeFileBtn.hide();
+        $captureBtn.hide();
+        $recaptureBtn.hide();
+
+        if (currentMode === 'upload') {
+            if (uploadedFile) {
+                $analyzeBtn.show();
+                $removeFileBtn.show();
+            }
+        } else { // Camera mode
+            if (uploadedFile) { // Photo has been captured
+                $analyzeBtn.show();
+                $recaptureBtn.show();
+            } else { // Live stream is active
+                $captureBtn.show();
+            }
+        }
+    }
+
+    // --- File Upload & Drag-Drop Logic ---
+    function handleFile(file) {
+        if (file && file.type.startsWith('image/')) {
+            uploadedFile = file;
+            $('#upload-prompt').hide();
+            $('#image-preview').attr('src', URL.createObjectURL(file));
+            $('#image-preview-container').show();
+            updateButtonVisibility();
+        } else {
+            alert("Please select a valid image file.");
+        }
+    }
+
+    $('.browse-link').on('click', () => $('#file-upload').click());
+    $('#file-upload').on('change', function() { handleFile(this.files[0]); });
+    
+    $uploadContainer.on({
+        dragenter: e => { e.preventDefault(); e.stopPropagation(); $uploadContainer.addClass('dragover'); },
+        dragover: e => { e.preventDefault(); e.stopPropagation(); $uploadContainer.addClass('dragover'); },
+        dragleave: e => { e.preventDefault(); e.stopPropagation(); $uploadContainer.removeClass('dragover'); },
+        drop: e => {
+            e.preventDefault();
+            e.stopPropagation();
+            $uploadContainer.removeClass('dragover');
+            handleFile(e.originalEvent.dataTransfer.files[0]);
+        }
+    });
+
+    $removeFileBtn.on('click', () => {
+        uploadedFile = null;
+        $('#file-upload').val(''); // Clear the input
+        $('#image-preview-container').hide();
+        $('#image-preview').attr('src', '#');
+        $('#upload-prompt').show();
+        updateButtonVisibility();
+    });
+
+    // --- Camera Logic ---
+    async function startCamera() {
+        if (stream) stopCamera(); // Stop any existing stream
+        resetCaptureState();
+        try {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw new Error("Camera API not supported.");
+            stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+            $video.srcObject = stream;
+            $video.style.display = 'block';
+            $snapshot.hide();
+        } catch (err) {
+            console.error("Error accessing camera:", err);
+            alert("Could not access camera. Please use a secure (HTTPS) connection and grant camera permission.");
+            switchMode('upload');
+        }
+    }
+
+    function stopCamera() {
+        if (stream) stream.getTracks().forEach(track => track.stop());
+        stream = null;
+    }
+
+    function resetCaptureState() {
+        uploadedFile = null;
+        $snapshot.hide().attr('src', '');
+        $analyzeBtn.text('Analyze');
+        $captureBtn.text('Capture');
+        if (currentMode === 'camera') {
+            $video.style.display = 'block';
+        }
+    }
+
+    $captureBtn.on('click', () => {
+        const context = $canvas.getContext('2d');
+        $canvas.width = $video.videoWidth;
+        $canvas.height = $video.videoHeight;
+        context.drawImage($video, 0, 0, $canvas.width, $canvas.height);
+        $canvas.toBlob(blob => {
+            uploadedFile = new File([blob], 'capture.jpg', { type: 'image/jpeg' });
+            $snapshot.attr('src', URL.createObjectURL(uploadedFile)).show();
+            $video.style.display = 'none';
+            stopCamera();
+            updateButtonVisibility();
+        }, 'image/jpeg');
+    });
+
+    $recaptureBtn.on('click', () => {
+        resetCaptureState();
+        startCamera();
+        updateButtonVisibility();
+    });
+
+    // --- Analysis Logic ---
+    $analyzeBtn.on('click', () => {
+        if (!uploadedFile) {
+            alert("No file or image to analyze.");
+            return;
+        }
+        const formData = new FormData();
+        formData.append('file', uploadedFile);
+        performAnalysis(formData);
+    });
+
+    function performAnalysis(formData) {
+        formData.append('csrfmiddlewaretoken', $('#analysis-form [name=csrfmiddlewaretoken]').val());
+        
+        $inputSection.hide();
+        $loadingSpinner.show();
+        $loadingText.show();
+
+        // Start loading message rotation
+        let messageIndex = Math.floor(Math.random() * loadingMessages.length);
+        $loadingText.text(loadingMessages[messageIndex]);
+        loadingInterval = setInterval(() => {
+            messageIndex = (messageIndex + 1) % loadingMessages.length;
+            $loadingText.text(loadingMessages[messageIndex]);
+        }, 2500);
+
+        $.ajax({
+            url: "{% url 'upload_and_scan_image' %}",
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: data => {
+                clearInterval(loadingInterval);
+                if (data.status === 'success') {
+                    window.location.href = data.redirect_url;
+                } else {
+                    $loadingSpinner.hide();
+                    $loadingText.hide();
+                    $inputSection.show();
+                    alert("Analysis Failed: " + (data.error || "An unknown error occurred."));
+                }
+            },
+            error: xhr => {
+                clearInterval(loadingInterval);
+                $loadingSpinner.hide();
+                $loadingText.hide();
+                $inputSection.show();
+                alert("An unexpected error occurred during analysis. Please try again.");
+                console.error('Error:', xhr.responseText);
+            }
         });
-    </script>
-</body>
-</html>
+    }
+});
+</script>
+{% endblock %}

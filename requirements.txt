@@ -1,6 +1,6 @@
 pytesseract
-Django==5.1.2  # or the version you're using
+Django==5.1.2
 gunicorn
 whitenoise==6.7.0
 brotli==1.1.0
-whitenoise
+google-generativeai==0.5.2

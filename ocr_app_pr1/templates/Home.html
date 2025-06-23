@@ -1,160 +1,171 @@
+{% extends 'base.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <title>NutriScan - Home</title>
-    <link rel="stylesheet" href="{% static 'css/dark-mode.css' %}">
-    <style>
-        /* Hero Section */
-        .hero-section {
-            background-image: url('{% static "images/hero-background.jpg" %}');
-            background-size: cover;
-            background-position: center;
-            color: white;
-            text-align: center;
-            padding: 100px 20px;
-            position: relative;
-        }
 
-        .hero-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image:url("{% static 'Nutrition_share.jpg' %}");
-            background-position: center;
-            background-size: cover;
-            background-repeat: no-repeat;
-            z-index: 1;
-        }
+{% block title %}Home{% endblock %}
 
-        .hero-content {
-            position: relative;
-            z-index: 2;
-            max-width: 700px;
-            margin: auto;
-        }
+{% block styles %}
+<style>
+    .home-container {
+        width: 100%;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 1rem;
+    }
 
-        .hero-title {
-            font-size: 3rem;
-            color: #080808;
-            margin-bottom: 20px;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
+    /* Hero Section */
+    .hero-section {
+        text-align: center;
+        padding: 5rem 1.5rem;
+        background: radial-gradient(ellipse at bottom, hsl(var(--secondary)), hsl(var(--background)));
+        border-radius: var(--radius);
+        margin-bottom: 3rem;
+        border: 1px solid hsl(var(--border));
+    }
+    .hero-section h1 {
+        font-size: 3.5rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        color: hsl(var(--foreground));
+    }
+    .hero-section p {
+        font-size: 1.2rem;
+        max-width: 650px;
+        margin: 0 auto 2rem auto;
+        color: hsl(var(--muted-foreground));
+    }
+    .hero-section .action-btn {
+        padding: 1rem 2.5rem;
+        font-size: 1.1rem;
+    }
 
-        .hero-subtitle {
-            font-size: 1.5rem;
-            color: #080808;
-            margin-bottom: 30px;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
+    /* Features Section */
+    .features-section {
+        text-align: center;
+        margin-bottom: 4rem;
+    }
+    .features-section h2 {
+        font-size: 2.5rem;
+        font-weight: 600;
+        margin-bottom: 2.5rem;
+        color: hsl(var(--foreground));
+        border: none;
+    }
+    .features-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 2rem;
+    }
+    .feature-item {
+        background-color: hsl(var(--secondary));
+        padding: 2rem;
+        border-radius: var(--radius);
+        border: 1px solid hsl(var(--border));
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .feature-item:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    .feature-icon {
+        font-size: 3.5rem;
+        margin-bottom: 1.5rem;
+        color: hsl(var(--primary));
+    }
+    .feature-item h3 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+        color: hsl(var(--foreground));
+    }
 
-        .hero-button {
-            background-color: #D94720;
-            color: white;
-            padding: 15px 30px;
-            font-size: 1.2rem;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            text-transform: uppercase;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
+    /* Diet Plan CTA Section */
+    .cta-section {
+        padding: 4rem 2rem;
+        border-radius: var(--radius);
+        text-align: center;
+        background: linear-gradient(135deg, #2a9d8f, #264653);
+        color: white;
+        border: 1px solid hsl(var(--border));
+    }
+    .cta-section h2 {
+        font-size: 2.5rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: white;
+        border: none;
+    }
+    .cta-section p {
+        font-size: 1.1rem;
+        color: rgba(255,255,255,0.85);
+        max-width: 600px;
+        margin: 0 auto 2rem auto;
+    }
+    .cta-section .action-btn {
+        background-color: rgba(255,255,255,0.9);
+        color: #264653;
+        font-weight: 700;
+    }
 
-        .hero-button:hover {
-            background-color: #c33d1b;
+    /* Responsive Design */
+    @media (max-width: 992px) {
+        .features-grid {
+            grid-template-columns: 1fr;
         }
+    }
+    
+    @media (max-width: 768px) {
+        .home-container {
+            padding: 0 0.5rem;
+        }
+        .hero-section h1 { font-size: 2.5rem; }
+        .hero-section { padding: 3rem 1rem; }
+        .features-section h2, .cta-section h2 { font-size: 2rem; }
+    }
+</style>
+{% endblock %}
 
-        /* Features Section */
-        .features-section {
-            padding: 60px 20px;
-            background-color: #f0f0f0;
-        }
+{% block content %}
+<div class="home-container">
+    
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <h1>Unlock Nutrition Facts Instantly</h1>
+        <p>Go beyond the label. Use your camera to scan any food product and get an instant, AI-powered analysis of its ingredients.</p>
+        <a href="{% url 'upload_and_scan_image' %}" class="action-btn">Scan a Product Now</a>
+    </section>
 
-        .features-title {
-            font-size: 2.5rem;
-            color: #D94720;
-            text-align: center;
-            margin-bottom: 40px;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        .feature-card {
-            background-color: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .feature-icon {
-            font-size: 3rem;
-            color: #D94720;
-            margin-bottom: 15px;
-        }
-
-        .feature-text {
-            font-size: 1.2rem;
-            color: #333;
-            margin-bottom: 10px;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        .hero-subtitle{
-            font-size: 30px;
-            color: #45A049;
-        }
-        .hero-title{
-            color: yellow;
-        }
-    </style>
-</head>
-<body>
-{% include "navbar.html" %}
-<div class="hero-section">
-    <div class="hero-overlay"></div>
-    <div class="hero-content">
-        <strong><h1 class="hero-title">Welcome to NutriScan</h1></strong>
-        <strong><p class="hero-subtitle">Your personal assistant for safer and healthier choices.</p></strong>
-        <a href="#features" class="hero-button">Learn More</a>
-    </div>
-</div>
-
-<!-- Features Section -->
-<div id="features" class="features-section">
-    <h2 class="features-title">Why Choose NutriScan?</h2>
-    <div class="container">
-        <div class="row">
-            <div class="col-md-4">
-                <div class="feature-card">
-                    <div class="feature-icon">&#128269;</div>
-                    <p class="feature-text">Quick and Easy Scanning</p>
-                    <p>Scan product labels with ease and get instant feedback on ingredients.</p>
-                </div>
+    <!-- Features Section -->
+    <section class="features-section">
+        <h2>How It Works</h2>
+        <div class="features-grid">
+            <div class="feature-item">
+                <div class="feature-icon">&#128248;</div>
+                <h3>1. Scan or Upload</h3>
+                <p>Use your device's camera to take a picture of an ingredient list or upload an existing image.</p>
             </div>
-            <div class="col-md-4">
-                <div class="feature-card">
-                    <div class="feature-icon">&#128200;</div>
-                    <p class="feature-text">Comprehensive Database</p>
-                    <p>Access a regularly updated database of harmful chemicals and additives.</p>
-                </div>
+            <div class="feature-item">
+                <div class="feature-icon">&#129504;</div>
+                <h3>2. AI Analysis</h3>
+                <p>Our AI gets to work, identifying ingredients, calculating a health score, and flagging concerns.</p>
             </div>
-            <div class="col-md-4">
-                <div class="feature-card">
-                    <div class="feature-icon">&#128161;</div>
-                    <p class="feature-text">User-Friendly Interface</p>
-                    <p>Navigate easily through the app and understand results in no time.</p>
-                </div>
+            <div class="feature-item">
+                <div class="feature-icon">&#128221;</div>
+                <h3>3. Get Your Report</h3>
+                <p>Receive a clear, easy-to-understand report with actionable insights and healthier alternatives.</p>
             </div>
         </div>
-    </div>
-</div>
+    </section>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+    <!-- Diet Plan CTA -->
+    <section class="cta-section">
+        <h2>Ready for a Healthier You?</h2>
+        <p>Get a personalized diet plan tailored to your body and goals. Just answer a few questions to start your journey.</p>
+        <a href="{% url 'diet_plan' %}" class="action-btn">Create Your Plan</a>
+    </section>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+{# The spotlight effect script is no longer needed with the new design #}
+{% endblock %}
