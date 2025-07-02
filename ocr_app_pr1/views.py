@@ -53,7 +53,7 @@ def upload_and_scan_image(request):
                         'description': ingredient.description
                     })
 
-            # 🔥 Call Gemini to analyze full OCR text
+            # Call Gemini to analyze full OCR text
             gemini_analysis = analyze_ingredients_with_gemini(extracted_text)
             
             # Store results in session
