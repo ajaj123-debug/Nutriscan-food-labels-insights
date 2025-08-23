@@ -23,6 +23,52 @@ else:
     raise RuntimeError("Tesseract OCR not found!")
 
 
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import redirect
+from django.contrib.auth import logout
+from .models import ScanResult
+
+def custom_logout(request):
+    """Custom logout view that redirects to home page"""
+    logout(request)
+    return redirect('Home')
+
+def debug_auth(request):
+    """Debug view to check authentication status"""
+    context = {
+        'user': request.user,
+        'is_authenticated': request.user.is_authenticated,
+        'social_auth': getattr(request.user, 'social_auth', None),
+    }
+    return render(request, 'debug_auth.html', context)
+
+def oauth_error(request):
+    """Handle OAuth authentication errors"""
+    error_message = request.GET.get('error', 'Unknown OAuth error')
+    error_description = request.GET.get('error_description', '')
+    
+    context = {
+        'error_message': error_message,
+        'error_description': error_description,
+    }
+    return render(request, 'oauth_error.html', context)
+
+def user_profile(request):
+    """Display user profile with their scan history"""
+    if not request.user.is_authenticated:
+        return redirect('login')
+    
+    # Get user's scan results
+    scan_results = ScanResult.objects.filter(user=request.user).order_by('-created_at')
+    
+    context = {
+        'user': request.user,
+        'scan_results': scan_results,
+        'total_scans': scan_results.count(),
+    }
+    return render(request, 'user_profile.html', context)
+
+@login_required
 def upload_and_scan_image(request):
     if request.method == 'POST':
         uploaded_file = request.FILES.get('file')
@@ -45,16 +91,120 @@ def upload_and_scan_image(request):
             harmful_ingredients = HarmfulIngredient.objects.all()
             matched_ingredients = []
 
-            # Check for matches in the extracted text
+            # Check for matches in the extracted text with context awareness
             for ingredient in harmful_ingredients:
                 if ingredient.name.lower() in extracted_text.lower():
-                    matched_ingredients.append({
-                        'name': ingredient.name,
-                        'description': ingredient.description
-                    })
+                    # Check if the ingredient has a quantity and if it's actually harmful
+                    ingredient_lower = ingredient.name.lower()
+                    text_lower = extracted_text.lower()
+                    
+                    # Look for quantity patterns around the ingredient
+                    import re
+                    
+                    # Pattern to find quantities (e.g., "cholesterol 0mg", "sodium 140mg")
+                    # Also look for patterns like "0mg cholesterol", "0 g cholesterol"
+                    quantity_patterns = [
+                        rf'{re.escape(ingredient_lower)}\s*(\d+(?:\.\d+)?)\s*(mg|g|mcg|%)',
+                        rf'(\d+(?:\.\d+)?)\s*(mg|g|mcg|%)\s*{re.escape(ingredient_lower)}',
+                        rf'{re.escape(ingredient_lower)}\s*(\d+(?:\.\d+)?)\s*(mg|g|mcg|%)',
+                    ]
+                    
+                    quantity_match = None
+                    for pattern in quantity_patterns:
+                        quantity_match = re.search(pattern, text_lower)
+                        if quantity_match:
+                            break
+                    
+                    if quantity_match:
+                        amount = float(quantity_match.group(1))
+                        unit = quantity_match.group(2)
+                        
+                        # Define safe thresholds for different nutrients
+                        safe_thresholds = {
+                            'cholesterol': {'mg': 300, 'g': 0.3, 'mcg': 300000, '%': 100},
+                            'sodium': {'mg': 2300, 'g': 2.3, 'mcg': 2300000, '%': 100},
+                            'saturated fat': {'mg': 0, 'g': 0, 'mcg': 0, '%': 0},
+                            'trans fat': {'mg': 0, 'g': 0, 'mcg': 0, '%': 0},
+                            'added sugar': {'mg': 0, 'g': 0, 'mcg': 0, '%': 0},
+                            'sugar': {'mg': 0, 'g': 0, 'mcg': 0, '%': 0},
+                        }
+                        
+                        # Check if the amount is within safe limits
+                        ingredient_key = ingredient_lower
+                        if ingredient_key in safe_thresholds:
+                            threshold = safe_thresholds[ingredient_key].get(unit, float('inf'))
+                            if amount <= threshold:
+                                continue  # Skip this ingredient as it's within safe limits
+                    
+                    # Additional context checks for common nutrition label patterns
+                    # Check if the ingredient appears in a "0" or "zero" context
+                    context_patterns = [
+                        rf'(\d+)\s*(mg|g|mcg|%)\s*{re.escape(ingredient_lower)}',
+                        rf'{re.escape(ingredient_lower)}\s*(\d+)\s*(\d+)\s*(mg|g|mcg|%)',
+                        rf'zero\s+{re.escape(ingredient_lower)}',
+                        rf'{re.escape(ingredient_lower)}\s*zero',
+                        rf'0\s*{re.escape(ingredient_lower)}',
+                        rf'{re.escape(ingredient_lower)}\s*0',
+                        rf'less than\s+(\d+)\s*(mg|g|mcg|%)\s*{re.escape(ingredient_lower)}',
+                        rf'{re.escape(ingredient_lower)}\s*less than\s+(\d+)\s*(mg|g|mcg|%)',
+                        rf'<(\d+)\s*(mg|g|mcg|%)\s*{re.escape(ingredient_lower)}',
+                        rf'{re.escape(ingredient_lower)}\s*<(\d+)\s*(mg|g|mcg|%)',
+                    ]
+                    
+                    is_safe_context = False
+                    for pattern in context_patterns:
+                        context_match = re.search(pattern, text_lower)
+                        if context_match:
+                            if 'zero' in pattern.lower() or (context_match.group(1) == '0'):
+                                is_safe_context = True
+                                break
+                            elif 'less than' in pattern.lower() or '<' in pattern:
+                                # Check if the amount is very small (likely safe)
+                                amount = float(context_match.group(1))
+                                if amount <= 5:  # Very small amounts are usually safe
+                                    is_safe_context = True
+                                    break
+                    
+                    # If no quantity found, quantity is harmful, or context suggests it's safe, add to matched ingredients
+                    if not is_safe_context:
+                        # Try to find the context around the ingredient
+                        context_start = max(0, text_lower.find(ingredient_lower) - 50)
+                        context_end = min(len(text_lower), text_lower.find(ingredient_lower) + len(ingredient_lower) + 50)
+                        context = text_lower[context_start:context_end].strip()
+                        
+                        # Try to find the actual quantity detected
+                        detected_quantity = None
+                        detected_unit = None
+                        
+                        for pattern in quantity_patterns:
+                            qty_match = re.search(pattern, text_lower)
+                            if qty_match:
+                                detected_quantity = qty_match.group(1)
+                                detected_unit = qty_match.group(2)
+                                break
+                        
+                        matched_ingredients.append({
+                            'name': ingredient.name,
+                            'description': ingredient.description,
+                            'context': context,
+                            'detected_quantity': detected_quantity,
+                            'detected_unit': detected_unit
+                        })
 
             # Call Gemini to analyze full OCR text
             gemini_analysis = analyze_ingredients_with_gemini(extracted_text)
+            
+            # Save scan result to database
+            scan_result = ScanResult.objects.create(
+                user=request.user,
+                image=uploaded_file,
+                extracted_text=extracted_text
+            )
+            
+            # Add harmful ingredients to the scan result
+            for ingredient_data in matched_ingredients:
+                ingredient_obj = HarmfulIngredient.objects.get(name=ingredient_data['name'])
+                scan_result.harmful_ingredients.add(ingredient_obj)
             
             # Store results in session
             request.session['analysis_results'] = {
@@ -64,7 +214,7 @@ def upload_and_scan_image(request):
             request.session.save()
 
             # Return a success response that JS will use to redirect
-            return JsonResponse({'status': 'success', 'redirect_url': '/Ingredient'})
+            return JsonResponse({'status': 'success', 'redirect_url': '/profile/'})
 
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
@@ -74,12 +224,9 @@ def upload_and_scan_image(request):
 def About(request):
     return render(request, 'About.html')
 def Contact(request):
-    return render(request, 'Contact.html')
+    return render (request, 'Contact.html')
 def Home(request):
     return render (request, 'Home.html')
-def Ingredient(request):
-    results = request.session.pop('analysis_results', None)
-    return render (request, 'Ingredient.html', {'results': results})
 
 def diet_plan(request):
     if request.method == 'POST':

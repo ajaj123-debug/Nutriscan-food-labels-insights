@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-danger text-white">
+                    <h3 class="text-center mb-0">OAuth Authentication Error</h3>
+                </div>
+                <div class="card-body p-4">
+                    <div class="alert alert-danger">
+                        <h5>Authentication Failed</h5>
+                        <p><strong>Error:</strong> {{ error_message }}</p>
+                        {% if error_description %}
+                            <p><strong>Description:</strong> {{ error_description }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-4">
+                        <h6>Common OAuth Issues and Solutions:</h6>
+                        <ul class="list-group">
+                            <li class="list-group-item">
+                                <strong>Redirect URI Mismatch:</strong> Ensure the redirect URI in Google Console matches exactly: 
+                                <code>https://nutriscan-food-labels-insights.onrender.com/social-auth/complete/google-oauth2/</code>
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Invalid Client ID/Secret:</strong> Check that your Google OAuth credentials are correct
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Domain Restrictions:</strong> Make sure your domain is allowed in Google Console
+                            </li>
+                            <li class="list-group-item">
+                                <strong>OAuth Consent Screen:</strong> Verify your app is properly configured in Google Console
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="text-center">
+                        <a href="{% url 'login' %}" class="btn btn-primary me-2">Try Again</a>
+                        <a href="{% url 'debug_auth' %}" class="btn btn-info me-2">Debug Auth</a>
+                        <a href="{% url 'Home' %}" class="btn btn-secondary">Go Home</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
