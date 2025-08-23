@@ -16,7 +16,7 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-un_5cb^$xjs&_2^u(c$mx2-vvl$sh4$zcpl87oh9z7%gsxhlbm'
+SECRET_KEY = os.environ.get('SECRET_KEY', 'your-default-secret-key')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -42,8 +42,8 @@ INSTALLED_APPS = [
 ]
 
 # Google OAuth settings
-SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = '990390516510-i43uhpe18le8vcdgeu1oino13nqfs821.apps.googleusercontent.com'
-SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = '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'
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.environ.get('SOCIAL_AUTH_GOOGLE_OAUTH2_KEY', '')
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.environ.get('SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET', '')
 
 # Configure the redirect URI based on environment
 if DEBUG:
