@@ -1,10 +1,13 @@
 
 import os
 from pathlib import Path
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-import os
 
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
@@ -16,7 +19,7 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('SECRET_KEY', 'your-default-secret-key')
+SECRET_KEY = 'django-insecure-your-secret-key-here-change-this-in-production'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -41,9 +44,9 @@ INSTALLED_APPS = [
     'ocr_app_pr1',
 ]
 
-# Google OAuth settings
-SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.environ.get('SOCIAL_AUTH_GOOGLE_OAUTH2_KEY', '')
-SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.environ.get('SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET', '')
+# Google OAuth settings - Hardcoded for both dev and prod
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = '990390516510-i43uhpe18le8vcdgeu1oino13nqfs821.apps.googleusercontent.com'
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = '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'
 
 # Configure the redirect URI based on environment
 if DEBUG:
@@ -53,11 +56,14 @@ else:
     # Production
     SOCIAL_AUTH_GOOGLE_OAUTH2_REDIRECT_URI = 'https://nutriscan-food-labels-insights.onrender.com/social-auth/complete/google-oauth2/'
 
-# Additional OAuth settings for better error handling
+# Additional OAuth settings to fix common issues
+SOCIAL_AUTH_GOOGLE_OAUTH2_WHITELISTED_DOMAINS = []
+SOCIAL_AUTH_GOOGLE_OAUTH2_WHITELISTED_EMAILS = []
 SOCIAL_AUTH_GOOGLE_OAUTH2_AUTH_EXTRA_ARGUMENTS = {
     'access_type': 'offline',
     'prompt': 'consent'
 }
+SOCIAL_AUTH_GOOGLE_OAUTH2_USE_DEPRECATED_API = False
 
 
 
