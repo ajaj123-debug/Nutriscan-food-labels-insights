@@ -43,7 +43,7 @@ def debug_auth(request):
     return render(request, 'debug_auth.html', context)
 
 def oauth_error(request):
-    """Handle OAuth authentication errors"""
+    
     error_message = request.GET.get('error', 'Unknown OAuth error')
     error_description = request.GET.get('error_description', '')
     
