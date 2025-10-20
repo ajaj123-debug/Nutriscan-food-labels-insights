@@ -22,12 +22,14 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-your-secret-key-here-chang
 # Host configuration based on environment
 if DEBUG:
     ALLOWED_HOSTS = [
+        '*',
         'localhost',
         '127.0.0.1',
         '0.0.0.0',
     ]
 else:
     ALLOWED_HOSTS = [
+        '*',
         'nutriscan-food-labels-insights.onrender.com',
         # Add your production domain here
     ]
