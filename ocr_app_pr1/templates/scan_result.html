@@ -1,0 +1,690 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Scan Results{% endblock %}
+
+{% block styles %}
+<style>
+    /* Main Wrapper */
+    #scan-result-wrapper {
+        width: 100%;
+        max-width: 650px;
+        margin: 0 auto;
+    }
+
+    /* Page Title */
+    #result-title {
+        color: hsl(var(--foreground));
+        font-weight: 700;
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+        text-align: center;
+    }
+
+    .result-subtitle {
+        color: hsl(var(--muted-foreground));
+        text-align: center;
+        margin-bottom: 2rem;
+        font-size: 1.1rem;
+    }
+
+    /* Main Card Container */
+    .result-card {
+        background-color: hsl(var(--card) / 0.8);
+        padding: 2rem;
+        border-radius: var(--radius);
+        border: 1px solid hsl(var(--border));
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.15);
+        margin-bottom: 1.5rem;
+    }
+
+    /* Section Headers */
+    .section-header {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+        color: hsl(var(--foreground));
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid hsl(var(--border));
+    }
+
+    .section-header::before {
+        content: '';
+        width: 4px;
+        height: 24px;
+        background: linear-gradient(180deg, hsl(var(--primary)), #16a34a);
+        border-radius: 2px;
+    }
+
+    /* Error State */
+    .error-card {
+        background-color: hsl(var(--destructive) / 0.1);
+        border-color: hsl(var(--destructive));
+        padding: 2rem;
+        border-radius: var(--radius);
+        border: 2px solid hsl(var(--destructive));
+        text-align: center;
+    }
+
+    .error-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+
+    .error-message {
+        color: hsl(var(--destructive-foreground));
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    /* Success State - No Harmful Ingredients */
+    .success-badge {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+        background: linear-gradient(135deg, hsl(var(--primary) / 0.1), rgba(22, 163, 74, 0.1));
+        border-radius: var(--radius);
+        border: 2px dashed #16a34a;
+        text-align: center;
+    }
+
+    .success-icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        animation: scaleIn 0.5s ease;
+    }
+
+    @keyframes scaleIn {
+        from {
+            transform: scale(0);
+            opacity: 0;
+        }
+        to {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+
+    .success-text {
+        color: hsl(var(--foreground));
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .success-subtext {
+        color: hsl(var(--muted-foreground));
+        font-size: 0.95rem;
+    }
+
+    /* Harmful Ingredients List */
+    .ingredients-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .ingredient-item {
+        background-color: hsl(var(--secondary) / 0.5);
+        padding: 1.25rem;
+        border-radius: calc(var(--radius) - 2px);
+        border-left: 4px solid hsl(var(--destructive));
+        transition: all 0.3s ease;
+        animation: slideIn 0.4s ease;
+        opacity: 0;
+        animation-fill-mode: forwards;
+    }
+
+    .ingredient-item:nth-child(1) { animation-delay: 0.1s; }
+    .ingredient-item:nth-child(2) { animation-delay: 0.2s; }
+    .ingredient-item:nth-child(3) { animation-delay: 0.3s; }
+    .ingredient-item:nth-child(4) { animation-delay: 0.4s; }
+    .ingredient-item:nth-child(5) { animation-delay: 0.5s; }
+    .ingredient-item:nth-child(6) { animation-delay: 0.6s; }
+    .ingredient-item:nth-child(7) { animation-delay: 0.7s; }
+    .ingredient-item:nth-child(8) { animation-delay: 0.8s; }
+    .ingredient-item:nth-child(n+9) { animation-delay: 0.9s; }
+
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    .ingredient-item:hover {
+        background-color: hsl(var(--accent) / 0.3);
+        transform: translateX(5px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .ingredient-name {
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: hsl(var(--foreground));
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .ingredient-name::before {
+        content: '⚠️';
+        font-size: 1rem;
+    }
+
+    .ingredient-description {
+        color: hsl(var(--muted-foreground));
+        line-height: 1.6;
+        margin-bottom: 0.75rem;
+    }
+
+    .ingredient-details {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-top: 0.75rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid hsl(var(--border) / 0.3);
+    }
+
+    .detail-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.4rem 0.8rem;
+        background-color: hsl(var(--muted) / 0.5);
+        border-radius: calc(var(--radius) - 4px);
+        font-size: 0.85rem;
+        color: hsl(var(--muted-foreground));
+    }
+
+    .detail-badge strong {
+        color: hsl(var(--foreground));
+        font-weight: 600;
+    }
+
+    .context-text {
+        font-style: italic;
+        color: hsl(var(--muted-foreground));
+        font-size: 0.9rem;
+        background-color: hsl(var(--background) / 0.5);
+        padding: 0.5rem 0.75rem;
+        border-radius: calc(var(--radius) - 4px);
+        margin-top: 0.5rem;
+    }
+
+    /* AI Analysis Section */
+    .ai-analysis {
+        background: linear-gradient(135deg, hsl(var(--primary) / 0.05), hsl(var(--accent) / 0.05));
+        border: 1px solid hsl(var(--border));
+        padding: 1.5rem;
+        border-radius: calc(var(--radius) - 2px);
+        margin-top: 1rem;
+    }
+
+    .ai-analysis-header {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+        color: hsl(var(--foreground));
+        font-weight: 600;
+        font-size: 1.25rem;
+    }
+
+    /* Health Score Display */
+    .health-score-container {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        padding: 1rem;
+        background-color: hsl(var(--secondary) / 0.3);
+        border-radius: calc(var(--radius) - 2px);
+    }
+
+    .health-score-label {
+        font-weight: 600;
+        color: hsl(var(--foreground));
+        white-space: nowrap;
+    }
+
+    .health-score-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: hsl(var(--primary));
+    }
+
+    .health-score-bar {
+        flex: 1;
+        height: 12px;
+        background-color: hsl(var(--muted));
+        border-radius: 6px;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .health-score-fill {
+        height: 100%;
+        background: linear-gradient(90deg, hsl(var(--destructive)), #f59e0b, #16a34a);
+        transition: width 0.5s ease;
+        border-radius: 6px;
+    }
+
+    .health-score-text {
+        font-size: 0.9rem;
+        color: hsl(var(--muted-foreground));
+        white-space: nowrap;
+    }
+
+    /* Summary Section */
+    .summary-box {
+        background-color: hsl(var(--card));
+        padding: 1.25rem;
+        border-radius: calc(var(--radius) - 2px);
+        border-left: 4px solid hsl(var(--primary));
+        margin-bottom: 1.5rem;
+    }
+
+    .summary-label {
+        font-weight: 600;
+        color: hsl(var(--foreground));
+        margin-bottom: 0.75rem;
+        font-size: 0.95rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .summary-text {
+        color: hsl(var(--foreground));
+        line-height: 1.7;
+        font-size: 1.05rem;
+    }
+
+    /* Health Concerns List */
+    .health-concerns {
+        margin-bottom: 1.5rem;
+    }
+
+    .concerns-label {
+        font-weight: 600;
+        color: hsl(var(--foreground));
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .concerns-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .concern-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+        padding: 0.75rem;
+        background-color: hsl(var(--secondary) / 0.3);
+        border-radius: calc(var(--radius) - 4px);
+    }
+
+    .concern-icon {
+        font-size: 1.25rem;
+        flex-shrink: 0;
+        margin-top: 0.1rem;
+    }
+
+    .concern-text {
+        color: hsl(var(--foreground));
+        line-height: 1.6;
+        flex: 1;
+    }
+
+    /* Harmful Ingredients from AI */
+    .ai-harmful-ingredients {
+        margin-bottom: 1.5rem;
+    }
+
+    .ai-harmful-label {
+        font-weight: 600;
+        color: hsl(var(--foreground));
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .ai-harmful-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .ai-harmful-item {
+        padding: 0.75rem;
+        background-color: hsl(var(--destructive) / 0.1);
+        border-left: 3px solid hsl(var(--destructive));
+        border-radius: calc(var(--radius) - 4px);
+    }
+
+    .ai-harmful-name {
+        font-weight: 600;
+        color: hsl(var(--destructive-foreground));
+        margin-bottom: 0.5rem;
+    }
+
+    .ai-harmful-reason {
+        color: hsl(var(--muted-foreground));
+        font-size: 0.95rem;
+        line-height: 1.6;
+    }
+
+    /* Alternatives Section */
+    .alternatives-box {
+        background: linear-gradient(135deg, rgba(22, 163, 74, 0.1), hsl(var(--primary) / 0.1));
+        padding: 1.25rem;
+        border-radius: calc(var(--radius) - 2px);
+        border-left: 4px solid #16a34a;
+        margin-top: 1.5rem;
+    }
+
+    .alternatives-label {
+        font-weight: 600;
+        color: hsl(var(--foreground));
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .alternatives-text {
+        color: hsl(var(--foreground));
+        line-height: 1.8;
+        font-size: 1rem;
+    }
+
+    /* Error State for AI Analysis */
+    .ai-error {
+        background-color: hsl(var(--destructive) / 0.1);
+        border: 1px solid hsl(var(--destructive));
+        padding: 1rem;
+        border-radius: calc(var(--radius) - 2px);
+        color: hsl(var(--destructive-foreground));
+    }
+
+    /* Action Buttons */
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        margin-top: 2rem;
+        flex-wrap: wrap;
+    }
+
+    .btn-scan-again {
+        padding: 0.75rem 1.5rem;
+        background-color: #16a34a;
+        color: white;
+        border: none;
+        border-radius: var(--radius);
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .btn-scan-again::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+        transition: left 0.6s ease;
+    }
+
+    .btn-scan-again:hover::before {
+        left: 100%;
+    }
+
+    .btn-scan-again:hover {
+        background-color: #15803d;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
+        color: white;
+        text-decoration: none;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        #result-title {
+            font-size: 2rem;
+        }
+
+        .result-card {
+            padding: 1.5rem;
+        }
+
+        .ingredient-item {
+            padding: 1rem;
+        }
+
+        .action-buttons {
+            flex-direction: column;
+        }
+
+        .btn-scan-again {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="scan-result-wrapper">
+    <h1 id="result-title">Scan Results</h1>
+    <p class="result-subtitle">AI-powered nutrition analysis complete</p>
+
+    {% if error %}
+        <div class="error-card">
+            <div class="error-icon">❌</div>
+            <p class="error-message">{{ error }}</p>
+            <div class="action-buttons" style="margin-top: 1.5rem;">
+                <a href="{% url 'upload_and_scan_image' %}" class="btn-scan-again">
+                    <span>🔄</span>
+                    <span>Try Again</span>
+                </a>
+            </div>
+        </div>
+    {% else %}
+        <!-- Harmful Ingredients Section -->
+        <div class="result-card">
+            <h2 class="section-header">Detected Harmful Ingredients</h2>
+            
+            {% if matched_ingredients %}
+                <ul class="ingredients-list">
+                    {% for item in matched_ingredients %}
+                        <li class="ingredient-item">
+                            <div class="ingredient-name">{{ item.name }}</div>
+                            <div class="ingredient-description">{{ item.description }}</div>
+                            <div class="ingredient-details">
+                                {% if item.detected_quantity %}
+                                    <span class="detail-badge">
+                                        <strong>Quantity:</strong> {{ item.detected_quantity }} {{ item.detected_unit }}
+                                    </span>
+                                {% endif %}
+                            </div>
+                            {% if item.context %}
+                                <div class="context-text">
+                                    <strong>Found in context:</strong> "{{ item.context }}"
+                                </div>
+                            {% endif %}
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <div class="success-badge">
+                    <div class="success-icon">✅</div>
+                    <div class="success-text">No harmful ingredients detected!</div>
+                    <div class="success-subtext">Your food appears to be free of known harmful additives.</div>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- AI Analysis Section -->
+        <div class="result-card">
+            <div class="ai-analysis">
+                <div class="ai-analysis-header">
+                    <span>NutriScan Analysis</span>
+                </div>
+                
+                {% if gemini_analysis.error %}
+                    <div class="ai-error">
+                        <strong>Error:</strong> {{ gemini_analysis.error }}
+                        {% if gemini_analysis.details %}
+                            <br><small>{{ gemini_analysis.details }}</small>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <!-- Health Score -->
+                    {% if gemini_analysis.health_score %}
+                        <div class="health-score-container">
+                            <span class="health-score-label">Health Score</span>
+                            <div class="health-score-value">{{ gemini_analysis.health_score }}/10</div>
+                            <div class="health-score-bar">
+                                <div class="health-score-fill" data-score="{{ gemini_analysis.health_score }}"></div>
+                            </div>
+                            <span class="health-score-text">
+                                {% if gemini_analysis.health_score >= 8 %}
+                                    Excellent
+                                {% elif gemini_analysis.health_score >= 6 %}
+                                    Good
+                                {% elif gemini_analysis.health_score >= 4 %}
+                                    Fair
+                                {% else %}
+                                    Poor
+                                {% endif %}
+                            </span>
+                        </div>
+                    {% endif %}
+
+                    <!-- Summary -->
+                    {% if gemini_analysis.summary %}
+                        <div class="summary-box">
+                            <div class="summary-label">📋 Summary</div>
+                            <div class="summary-text">{{ gemini_analysis.summary }}</div>
+                        </div>
+                    {% endif %}
+
+                    <!-- AI-Detected Harmful Ingredients -->
+                    {% if gemini_analysis.harmful_ingredients %}
+                        <div class="ai-harmful-ingredients">
+                            <div class="ai-harmful-label">
+                                <span>⚠️</span>
+                                <span>AI-Detected Concerns</span>
+                            </div>
+                            <ul class="ai-harmful-list">
+                                {% for ingredient in gemini_analysis.harmful_ingredients %}
+                                    <li class="ai-harmful-item">
+                                        <div class="ai-harmful-name">{{ ingredient.name }}</div>
+                                        <div class="ai-harmful-reason">{{ ingredient.reason }}</div>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+
+                    <!-- Health Concerns -->
+                    {% if gemini_analysis.health_concerns %}
+                        <div class="health-concerns">
+                            <div class="concerns-label">
+                                <span>🏥</span>
+                                <span>Health Concerns</span>
+                            </div>
+                            <ul class="concerns-list">
+                                {% for concern in gemini_analysis.health_concerns %}
+                                    <li class="concern-item">
+                                        <span class="concern-icon">•</span>
+                                        <span class="concern-text">{{ concern }}</span>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+
+                    <!-- Alternatives -->
+                    {% if gemini_analysis.alternatives %}
+                        <div class="alternatives-box">
+                            <div class="alternatives-label">
+                                <span>💡</span>
+                                <span>Healthier Alternatives</span>
+                            </div>
+                            <div class="alternatives-text">{{ gemini_analysis.alternatives }}</div>
+                        </div>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+            <a href="{% url 'upload_and_scan_image' %}" class="btn-scan-again">
+                <span>📷</span>
+                <span>Scan Another Item</span>
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+$(document).ready(function() {
+    // Animate health score bar on load
+    $('.health-score-fill').each(function() {
+        const score = parseInt($(this).data('score')) || 0;
+        const percentage = (score / 10) * 100;
+        const $fill = $(this);
+        
+        // Start at 0
+        $fill.css('width', '0%');
+        
+        // Animate to target width
+        setTimeout(function() {
+            $fill.css('width', percentage + '%');
+        }, 300);
+    });
+});
+</script>
+{% endblock %}

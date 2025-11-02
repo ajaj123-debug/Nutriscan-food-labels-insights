@@ -21,16 +21,13 @@ class UserProfile(models.Model):
         return self.user.email
 
 class ScanResult(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     image = models.ImageField(upload_to='scan_results/')
     extracted_text = models.TextField()
     harmful_ingredients = models.ManyToManyField(HarmfulIngredient)
     created_at = models.DateTimeField(auto_now_add=True)
     
     def __str__(self):
-        return f"Scan result for {self.user.email} at {self.created_at}"
-
-@receiver(post_save, sender=User)
-def create_user_profile(sender, instance, created, **kwargs):
-    if created:
-        UserProfile.objects.create(user=instance)
+        if self.user:
+            return f"Scan result for {self.user.email} at {self.created_at}"
+        return f"Scan result (anonymous) at {self.created_at}"
