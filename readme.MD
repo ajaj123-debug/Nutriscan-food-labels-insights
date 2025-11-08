@@ -400,7 +400,7 @@ This project is open source and available under the [MIT License](LICENSE).
 
 For issues, questions, or contributions:
 
-- **GitHub Issues**: [Open an issue](https://github.com/yourusername/Nutriscan-food-labels-insights/issues)
+- **GitHub Issues**: [Open an issue](https://github.com/ajaj123-debug/Nutriscan-food-labels-insights/issues)
 - **Email**: your-email@example.com
 
 ---
