@@ -82,7 +82,7 @@ Before you begin, ensure you have the following installed:
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/Nutriscan-food-labels-insights.git
+git clone https://github.com/ajaj123-debug/Nutriscan-food-labels-insights
 cd Nutriscan-food-labels-insights
 ```
 
