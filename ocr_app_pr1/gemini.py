@@ -1,8 +1,17 @@
 import google.generativeai as genai
 import json
+import os
+from dotenv import load_dotenv
 
-# Directly configure Gemini with your API key
-genai.configure(api_key="AIzaSyB2xh0evZ_-s_nBoZF_qjD-ChDl4PPnlVg")
+# Load environment variables from .env file
+load_dotenv()
+
+# Configure Gemini with API key from environment variable
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
+if not GEMINI_API_KEY:
+    raise ValueError("GEMINI_API_KEY environment variable is not set. Please set it in your .env file or environment variables.")
+
+genai.configure(api_key=GEMINI_API_KEY)
 
 def analyze_ingredients_with_gemini(ingredients_text):
     prompt = f"""
