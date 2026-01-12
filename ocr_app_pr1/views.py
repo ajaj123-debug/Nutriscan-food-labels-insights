@@ -30,7 +30,7 @@ def scan_result(request):
     analysis_results = request.session.get('analysis_results')
 
     if not analysis_results:
-        return render(request, 'scan_result.html', {'error': 'No analysis results found. Please scan again.'})
+        return render(request, 'scan_result.html', {'error': 'No analysis results found. Scan again.'})
 
     matched_ingredients = analysis_results.get('matched_ingredients', [])
     gemini_analysis = analysis_results.get('gemini_analysis', {})
