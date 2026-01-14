@@ -35,7 +35,7 @@ def scan_result(request):
     matched_ingredients = analysis_results.get('matched_ingredients', [])
     gemini_analysis = analysis_results.get('gemini_analysis', {})
     
-    # Ensure gemini_analysis is a dict (in case it was stored as string)
+    # Ensure gemini_analysis is a dict (in case it was stored as string)////
     import json
     if isinstance(gemini_analysis, str):
         try:
