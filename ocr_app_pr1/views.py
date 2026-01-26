@@ -12,10 +12,12 @@ import tempfile
 from .gemini import generate_diet_plan_with_gemini
 import datetime
 import uuid
+import shutil
+
 
 # Set the Tesseract OCR path
 # pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
-import shutil
+
 tesseract_cmd = shutil.which("tesseract")
 if tesseract_cmd:
     pytesseract.pytesseract.tesseract_cmd = tesseract_cmd
