@@ -5,7 +5,7 @@ from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 import pytesseract
 from PIL import Image
-from .models import HarmfulIngredient  # Import the HarmfulIngredient model
+from .models import HarmfulIngredient
 import os
 from django.core.files.base import ContentFile
 import tempfile
