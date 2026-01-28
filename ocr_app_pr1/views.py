@@ -84,10 +84,6 @@ def upload_and_scan_image(request):
                     
                     # Look for quantity patterns around the ingredient
                     import re
-                    
-                    # Pattern to find quantities (e.g., "cholesterol 0mg", "sodium 140mg")
-                    
-                    
                     # Also look for patterns like "0mg cholesterol", "0 g cholesterol"
                     quantity_patterns = [
                         rf'{re.escape(ingredient_lower)}\s*(\d+(?:\.\d+)?)\s*(mg|g|mcg|%)',
