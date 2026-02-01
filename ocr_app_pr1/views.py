@@ -13,6 +13,7 @@ from .gemini import generate_diet_plan_with_gemini
 import datetime
 import uuid
 import shutil
+from .models import ScanResult
 
 
 # Set the Tesseract OCR path
@@ -23,9 +24,6 @@ if tesseract_cmd:
     pytesseract.pytesseract.tesseract_cmd = tesseract_cmd
 else:
     raise RuntimeError("Tesseract OCR not found!")
-
-
-from .models import ScanResult
 
 
 def scan_result(request):
