@@ -115,6 +115,8 @@ def upload_and_scan_image(request):
                             threshold = safe_thresholds[ingredient_key].get(unit, float('inf'))
                             if amount <= threshold:
                                 continue  # Skip this ingredient as it's within safe limits
+                            
+                            
                     
                     # Additional context checks for common nutrition label patterns
                     # Check if the ingredient appears in a "0" or "zero" context
