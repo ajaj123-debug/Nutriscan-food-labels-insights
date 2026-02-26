@@ -6,7 +6,7 @@ from ocr_app_pr1.views import *
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    # path('', Home, name='Home'),
+    path('', Home, name='Home'),
     path('upload_and_scan_image', upload_and_scan_image, name='upload_and_scan_image'),
     path('About', About, name='About'),
     path('Contact', Contact, name='Contact'),
