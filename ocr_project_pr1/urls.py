@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.urls import path
 from ocr_app_pr1.views import upload_and_scan_image, diet_plan, generate_calendar
 from ocr_app_pr1.views import *
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', Home, name='Home'),
