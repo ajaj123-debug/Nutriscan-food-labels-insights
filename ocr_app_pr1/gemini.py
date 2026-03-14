@@ -62,6 +62,7 @@ def analyze_ingredients_with_gemini(ingredients_text):
         }
 
 def generate_diet_plan_with_gemini(details):
+    
     prompt = f"""
     You are a professional nutritionist and fitness coach. Based on the following user details, create a 6-day personalized diet plan (Monday to Saturday) in JSON format.
 

@@ -174,6 +174,7 @@ def upload_and_scan_image(request):
                         })
 
             # Call Gemini to analyze full OCR text
+            
             gemini_analysis = analyze_ingredients_with_gemini(extracted_text)
             
             # Save scan result to database (no user required)
@@ -184,6 +185,7 @@ def upload_and_scan_image(request):
             )
             
             # Add harmful ingredients to the scan result
+            
             for ingredient_data in matched_ingredients:
                 ingredient_obj = HarmfulIngredient.objects.get(name=ingredient_data['name'])
                 scan_result.harmful_ingredients.add(ingredient_obj)
