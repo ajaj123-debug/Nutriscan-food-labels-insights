@@ -62,7 +62,6 @@ def analyze_ingredients_with_gemini(ingredients_text):
         }
 
 def generate_diet_plan_with_gemini(details):
-    
     prompt = f"""
     You are a professional nutritionist and fitness coach. Based on the following user details, create a 6-day personalized diet plan (Monday to Saturday) in JSON format.
 
@@ -77,7 +76,6 @@ def generate_diet_plan_with_gemini(details):
     Please structure your response as a JSON object with the following keys:
     - "summary": A brief, encouraging summary (2-3 sentences) of the diet plan's strategy, including estimated daily calorie intake.
     - "daily_plan": An object containing keys for each day from "monday" to "saturday". Each day should be an object with keys for "breakfast", "lunch", "dinner", and "snacks".
-
     Example of expected output:
     {{
       "summary": "This 6-day plan focuses on lean proteins, complex carbs, and healthy fats to support your goal of weight loss. Expect a daily intake of around 1800-2000 calories. Stay hydrated and remember consistency is key! Sunday is a rest day.",
