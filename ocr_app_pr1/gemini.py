@@ -45,7 +45,6 @@ def analyze_ingredients_with_gemini(ingredients_text):
     Provide only the JSON object in your response.
     """
     try:
-        
         model = genai.GenerativeModel("gemini-2.5-flash")
         response = model.generate_content(prompt)
         text_response = response.text.strip()
